@@ -73,10 +73,11 @@
                 <br />
                 <small class="text-muted">Activa el autocomplete para busqueda de participantes.</small>
             </div>
-            <div class="col-lg-8">
+            <div class="col-lg-8" ng-init="autocomplete=<?=$configuracion->autocomplete?>">
                
-                 <label><input type="radio" name="autocomplete" value="1" <?=$configuracion->autocomplete==1?'checked':''?>/> Si</label>
-                <label><input type="radio" name="autocomplete" value="0" <?=$configuracion->autocomplete!=1?'checked':''?>/> No</label>
+                <label><input type="radio" name="autocomplete" ng-model="autocomplete"  value="1" <?=$configuracion->autocomplete==1?'checked':''?>/> Si</label>
+                <label><input type="radio" name="autocomplete" ng-model="autocomplete"  value="0" <?=$configuracion->autocomplete!=1?'checked':''?>/> No</label>
+                
             </div>
         </div>
         <hr />
@@ -91,6 +92,43 @@
                 <label><input type="radio" name="forced" value="0" <?=$configuracion->forced!=1?'checked':''?>/> No</label> 
                   
             </div>
+        </div>
+        <hr />
+        
+        <div class="form-group row">
+            <div class="col-lg-4">
+                <label>Habilitar fotografia</label>
+                <br />
+                <small class="text-muted">Habilita la subida de fotografia del participante al registro.</small>
+            </div>
+            <div class="col-lg-8">
+                <label><input type="radio" name="fotografia" value="1" <?=$configuracion->fotografia==1?'checked':''?>/> Si</label>
+                <label><input type="radio" name="fotografia" value="0" <?=$configuracion->fotografia!=1?'checked':''?>/> No</label> 
+                  
+            </div>
+        </div>
+        <hr />
+        <div class="form-group row">
+            <div class="col-lg-4">
+                <label>Columnas del registro</label>
+                <br />
+                <small class="text-muted">Presentación de la plantilla de registro.</small>
+            </div>
+            
+            <div class="col-lg-8">
+                <label><input type="radio" name="template_column" value="2-6-4" <?=$configuracion->template_column=='2-6-4'?'checked':''?>/> Imagen - Evento - Formulario</label>
+                <label><input type="radio" name="template_column" value="6-6" <?=$configuracion->template_column=='6-6'?'checked':''?>/> Evento - Formulario</label> 
+                  
+            </div>
+        </div>
+        <hr />
+        <div class="form-group row">
+            <div class="col-lg-4">
+                <label>Concatenar campo participante</label>
+                <br />
+                <small class="text-muted">Agrega los campos a concatenar para formar el nombre del participante</small>
+            </div>
+            <div class="col-lg-8"><?=form_input('participante',$configuracion->participante,'class="form-control" ng-disabled="autocomplete==0"')?></div>
         </div>
         <hr />
         <div class="form-group row" ng-if="disciplinas==1" >
@@ -243,6 +281,7 @@
                                 <option value="select">Seleccion</option>
                                 <option value="upload">Archivo</option>
                                 <option value="hidden">Oculto</option>
+                                <option value="textarea">Area de texto(Chips)</option>
                             </select>
                                 
                     </div>

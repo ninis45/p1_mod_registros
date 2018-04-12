@@ -317,7 +317,7 @@ class Admin extends Admin_Controller
                              $data['user_id']      = $this->input->post('user_id');
                              
                              $data['extra']        = json_encode($row); 
-                             print_r($segments);
+                            
                              foreach($segments AS $segment)
                              {
                                  $data['participante'] .= $data['participante']==''?$row->{$segment}:' '.$row->{$segment};

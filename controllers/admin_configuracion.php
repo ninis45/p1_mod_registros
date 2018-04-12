@@ -20,11 +20,11 @@ class Admin_configuracion extends Admin_Controller {
 		parent::__construct();
         $this->lang->load('registro');
         $this->validation_rules = array(
- 		            /* array(
-						'field' => 'titulo',
-						'label' => 'Titulo',
-						'rules' => 'trim|required'
-						),*/
+ 		             array(
+						'field' => 'participante',
+						'label' => 'Participante',
+						'rules' => 'trim'
+						),
                      array(
 						'field' => 'auth',
 						'label' => 'Autenticación',
@@ -95,6 +95,16 @@ class Admin_configuracion extends Admin_Controller {
 						'label' => 'Plantilla email',
 						'rules' => 'trim'
 						),
+                    array(
+						'field' => 'fotografia',
+						'label' => 'Fotografia',
+						'rules' => 'trim'
+						),
+                   array(
+						'field' => 'template_column',
+						'label' => 'Plantilla de las columnas',
+						'rules' => 'trim'
+						),
                     
         );
         $this->load->model('configuracion_m');
@@ -125,9 +135,14 @@ class Admin_configuracion extends Admin_Controller {
                 'disciplinas'   => $this->input->post('disciplinas'),
                 'template'   => $this->input->post('template'),
                 'template_cedula'   => $this->input->post('template_cedula'),
+                'template_column'   => $this->input->post('template_column'),
+                'participante'        => $this->input->post('participante'),
                 
                 'acuse'   => $this->input->post('acuse'),
                 'cerrado'   => $this->input->post('cerrado'),
+                
+                'fotografia'   => $this->input->post('fotografia'),
+                
                 'javascript'   => $this->input->post('javascript'),
                 'group_by'   => $this->input->post('group_by'),
                 'campos'      => $this->input->post('campos')?json_encode($this->input->post('campos')):null,

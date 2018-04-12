@@ -19,9 +19,14 @@ class Registros extends Public_Controller
         $this->load->library(array('files/files','registros/registro'));
         $this->lang->load('calendar');
         $this->validation_rules = array(
-			'id_disciplina'=>	array(
-				'field' => 'id_disciplina',
+			'disciplina'=>	array(
+				'field' => 'disciplina',
 				'label' => 'Disciplina',
+				'rules' => 'trim'
+				),
+            'rama'=>	array(
+				'field' => 'rama',
+				'label' => 'Rama',
 				'rules' => 'trim'
 				),
 			array(
@@ -101,6 +106,7 @@ class Registros extends Public_Controller
                 ->append_css('typehead.css')
                 ->set_breadcrumb('Eventos','registros');
     }
+    
     function _valid_participante($field)
     {
         
@@ -403,7 +409,7 @@ class Registros extends Public_Controller
         //Verificar funcionalidad
         if($this->input->get('participante'))
         {
-            $participante = $this->registro_m->get_by(array(
+            $participante = $this->registro_m->select('*,id_disciplina AS disciplina')->get_by(array(
                                     'registros.id_evento'    => $id_evento,
                                     'participante' => $this->input->get('participante'),
                                     
@@ -421,7 +427,7 @@ class Registros extends Public_Controller
         
         if($id = $this->input->get('id'))
         {
-            $registro = $this->registro_m->get($this->input->get('id'));
+            $registro = $this->registro_m->select('*,id_disciplina AS disciplina')->get($this->input->get('id'));
             
             //Extraemos los valores iniciales del extra y la tabla foranea.
             $values        = Registro::GetResult($configuracion,$registro);
@@ -471,14 +477,25 @@ class Registros extends Public_Controller
         //Habilitar disciplina
         if($configuracion->disciplinas)
         {
-            $this->validation_rules['id_disciplina']['rules'].='|required|callback__valid_disciplina';
+            $this->validation_rules['disciplina']['rules'].='|required|callback__valid_disciplina';
             $disciplinas = $this->db->where(array(
                                 'id_evento' => $id_evento,
-                                '(activo=1 OR id='.($registro->id_disciplina?$registro->id_disciplina:0).')'    => null
+                                '(activo=1 OR id='.($registro->disciplina?$registro->disciplina:0).')'    => null
                             ))->get('disciplinas')->result();
             
             if($disciplinas)
                 $this->template->set('disciplinas',array_for_select($disciplinas,'id','nombre'));
+        }
+       
+        if($this->input->post('disciplina'))
+        {
+             $disciplina    = $this->db->where('id',$this->input->post('disciplina'))
+                                ->get('disciplinas')->row();
+            // print_r($disciplina);               
+            if($disciplina->rama > 0)                   
+                $this->validation_rules['rama']['rules'].='|required';
+            
+            
         }
         
         $this->form_validation->set_rules($this->validation_rules);	
@@ -486,7 +503,7 @@ class Registros extends Public_Controller
        	if($this->form_validation->run())
 		{
             unset($_POST['btnAction']);
-            $folder = $this->file_folders_m->get_by_path('portadas') OR show_error('La carpeta aun no ha sido creada: Portadas');
+            $folder = $this->file_folders_m->get_by_path('alumnos') OR show_error('La carpeta aun no ha sido creada: Alumnos');
             $extra = array();
             
             foreach($configuracion->campos as $campo)
@@ -496,8 +513,7 @@ class Registros extends Public_Controller
                 if($campo->tipo == 'upload' && $_FILES[$campo->slug]['name'])
                 {
                     $result_file = Files::upload($folder->id,false,$campo->slug);
-                    //print_r($result_file);
-                    //exit();
+                    
                     if($result_file['status'])
                     {
                         $extra[$campo->slug]  = $result_file['data']['id'];
@@ -515,9 +531,10 @@ class Registros extends Public_Controller
                 'participante' => strtoupper($this->input->post('participante')),
                 'telefono'     => $this->input->post('telefono'),
                 'email'        => $this->input->post('email'),
+                'rama'         => $this->input->post('rama'),
                 'updated_on'   => now(),
-                'id_disciplina' => $this->input->post('id_disciplina')?$this->input->post('id_disciplina'):null,
-                
+                'id_disciplina' => $this->input->post('disciplina')?$this->input->post('disciplina'):null,
+                'fotografia'    => $this->input->post('fotografia'),
                 //'id_centro' => $this->input->post('centro'),
                 'sexo'     => $this->input->post('sexo')?$this->input->post('sexo'):null,
                 'inscrito' => 1,
@@ -525,7 +542,12 @@ class Registros extends Public_Controller
                 'extra' => json_encode($extra)
             );
             
-            
+            $fotografia = Files::upload($folder->id,false,'fotografia',false,false,false,'jpg|png|jpeg|gif');
+                    
+            if($fotografia['status'])
+            {
+                        $data['fotografia']  = $fotografia['data']['id'];
+            }
            
             if($this->registro_m->update($id,$data))
             {
@@ -563,7 +585,7 @@ class Registros extends Public_Controller
                  redirect('registros/editar/'.$id_evento);
             }
         }
-        
+       
         if($_POST)
         {
             $registro = (Object)$_POST;
@@ -572,7 +594,7 @@ class Registros extends Public_Controller
                 ->set_layout('basic.html')
                 ->append_js('spin.min.js')
                 ->append_js('module::front/form.js')
-                ->append_metadata('<script type="text/javascript">var text_empty=\'\', lng='.($evento->map_longitud?$evento->map_longitud:-90.5467695763607).',lat='.($evento->map_latitud?$evento->map_latitud:19.833932192097134).',zoom='.($evento->map_zoom?$evento->map_zoom:10).', url_current=\''.base_url($this->uri->uri_string()).'\', data ='.json_encode($data_autocomplete).'; '.$configuracion->javascript.'</script>')
+                ->append_metadata('<script type="text/javascript">var value_rama=\''.$registro->rama.'\', display_autocomplete=false, disciplinas='.(isset($disciplinas)?json_encode($disciplinas):'[]').', text_empty=\'\', lng='.($evento->map_longitud?$evento->map_longitud:-90.5467695763607).',lat='.($evento->map_latitud?$evento->map_latitud:19.833932192097134).',zoom='.($evento->map_zoom?$evento->map_zoom:10).', url_current=\''.base_url($this->uri->uri_string()).'\', data ='.json_encode($data_autocomplete).'; '.$configuracion->javascript.'</script>')
                 ->set('evento',$evento)
                 ->set('registro',$registro)
                 ->set('configuracion',$configuracion)
@@ -583,9 +605,23 @@ class Registros extends Public_Controller
       
         
     }
+    function remove($id=0)
+    {
+        $registro = $this->registro_m->get($id) OR show_404();
+        
+        if($this->registro_m->update($registro->id,array(
+        
+            'inscrito' => 0
+        )))
+        {
+            $this->session->set_flashdata('success',lang('global:delete_success'));
+        }
+        
+        redirect('registros/'.$registro->id_evento);
+    }
     function details($id_evento='',$id)
     {
-        $registro = $this->registro_m->get($id);
+        $registro = $this->registro_m->select('*,id_disciplina AS disciplina')->get($id);
          
         
          

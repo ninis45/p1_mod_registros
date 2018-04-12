@@ -1,9 +1,18 @@
+<style type="text/css">
+    .table-registros i{
+        opacity:1!important;
+        font-size: 16px;
+    }
+    .btn-small{
+        padding: 5px 6px!important;
+    }
+</style>
 <div class="container">
         <header><h1><?=$evento->titulo?></h1></header>
         
         <div class="row">
             
-            
+            <?php if($configuracion->template_columns=='2-6-4') :?>
             <!-- Course Image -->
             <div class="col-md-2">
                 <figure class="course-image">
@@ -12,6 +21,7 @@
                     <?php }?>
                 </figure>
             </div><!-- end Course Image -->
+            <?php endif; ?>
             <!--MAIN Content-->
             <div class="col-md-6">
                 <div id="page-main">
@@ -71,7 +81,7 @@
            
             <!--SIDEBAR Content-->
            
-            <div class="col-md-4">
+            <div class="<?=$configuracion->template_columns=='2-6-4'?'col-md-4':'col-md-6'?>">
                 <div id="page-sidebar" class="sidebar">
                     <?php if($configuracion->descripcion){ ?>
                                     <div class="alert alert-info">
@@ -98,7 +108,7 @@
                             <section id="my-profile">
                                 
                                 <div class="form-group">
-                                    <label>Buscar por participante</label>
+                                    <label>Buscar por participante</label><br />
                                     <?=form_input('participante',null,'class="form-control typeahead text-uppercase" id="text_auto"  ')?>
                                     <input type="hidden" name="module_id" value=""  />
                                  </div>
@@ -116,7 +126,7 @@
                                 <!--input type="text" class="form-control" placeholder="Buscar participante" />
                                 <hr /-->
                                 <p class="text-right">TOTAL REGISTROS: <?=count($inscritos)?></p>
-                                <table class="table table-hover table-responsive course-list-table tablesorter">
+                                <table class="table table-hover table-responsive course-list-table tablesorter table-registros">
                                     <thead>
                                         <tr>
                                             <th>Participante</th>
@@ -133,7 +143,8 @@
                                                 
                                                 </th>
                                             <th class="text-center">
-                                                <a class="btn btn-small" href="<?=base_url('registros/editar/'.$registro->id_evento.'?participante='.$registro->participante.'&module_id='.$registro->module_id)?>">Editar</a>
+                                                <a class="btn btn-small btn-color-grey-light confirm" href="<?=base_url('registros/remove/'.$registro->id)?>"><i class="fa fa-trash"></i></a>
+                                                <a class="btn btn-small" href="<?=base_url('registros/editar/'.$registro->id_evento.'?participante='.$registro->participante.'&module_id='.$registro->module_id)?>"><i class="fa fa-pencil"></i></a>
                                             </th>
                                         </tr>
                                     <?php }?>

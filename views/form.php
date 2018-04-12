@@ -1,10 +1,39 @@
-
+<style type="text/css">
+.textarea {
+    border:2px solid #c5c5c5;
+    padding: 6px 3px;
+}
+.textarea .item{
+    background: #767676;
+    color:#FFF;
+    padding:4px 6px;
+    margin-right: 2px;
+}
+.textarea .item a{
+    color:#FFF;
+    margin-left: 4px;
+}
+    .textarea .container-chip{
+        
+        
+    }
+.textarea input{
+        border-color: transparent;
+        width: auto;
+        margin-top: 4px;
+        display: inline-block;
+        background: #FFF;
+}
+.textarea input:hover{
+    border-color: transparent ;
+}
+</style>
 <div class="container">
         <header><h1><?=$evento->titulo?></h1></header>
         
         <div class="row">
             
-            <?php if(!$this->input->get('facebook')) :?>
+            <?php if($configuracion->template_columns=='2-6-4') :?>
             <!-- Course Image -->
             <div class="col-md-2">
                 <figure class="course-image">
@@ -12,7 +41,8 @@
                     <div class="image-wrapper"><a href="<?=base_url('files/large/'.$evento->portada)?>" class="fancybox"><img src="<?=base_url('files/cloud_thumb/'.$evento->portada.'/220/200')?>"/></a></div>
                     <?php }?>
                 </figure>
-            </div><!-- end Course Image -->
+            </div><!-- end Course Image --> 
+            <?php endif;?>
             <!--MAIN Content-->
             <div class="col-md-6">
                 <div id="page-main">
@@ -67,16 +97,8 @@
             </div><!-- /.col-md-8 -->
            
             <!--SIDEBAR Content-->
-            <?php else:?>
-            <div class="col-md-6 col-md-offset-3">
-                <figure class="course-image">
-                    <?php if($evento->portada){ ?>
-                   <img src="<?=base_url('files/large/'.$evento->portada)?>"/>
-                    <?php }?>
-                </figure>
-            </div><!-- end Course Image -->
-            <?php endif;?>
-            <div class="<?=!$this->input->get('facebook')?'col-md-4':'col-md-6 col-md-offset-3'?>">
+           
+            <div class="<?=$configuracion->template_columns=='2-6-4'?'col-md-4':'col-md-6'?>">
                 <div id="page-sidebar" class="sidebar">
                 <?php if($configuracion->cerrado != 1){ ?>
                     <aside>
@@ -100,40 +122,31 @@
                         <?php }else{?>
                          <div class="form-group">
                             <label>Participante</label>
-                            <?=form_input('participante',$registro->participante,'class="form-control text-uppercase" placeholder="Nombre del participante" '.($this->method == 'details'?'disabled':''))?>
+                            <?=form_input('participante_in',$registro->participante,'class="form-control text-uppercase" placeholder="Nombre del participante" disabled')?>
                             <?=form_error('participante','<span class="text-danger">','</span>')?>
-                            
+                             <input type="hidden" name="participante" value="<?=$registro->participante?>" />
                             <input type="hidden" name="evento" value="<?=$evento->id?>" />
                          </div>
                         <?php foreach($configuracion->campos as  $campo): ?>
                             <div class="form-group">
                             <?php if($campo->tipo!='hidden'){ ?>
-                                <label><?=$campo->nombre?></label>
+                                <label><?=$campo->obligatorio?'*':''?><?=$campo->nombre?></label>
                             <?php }?>
                             <?php switch($campo->tipo){
                                     case 'text': ?>
                                     <?php echo  form_input($campo->slug,$registro->{$campo->slug},'placeholder="'.$campo->nombre.'" '.($this->method == 'details'?'disabled':''));?>
                                 <?php break;
-                                      case 'upload':
+                                      case 'textarea':
                                  ?>
                                    
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                         <?php if($registro->{$campo->slug}){ ?>
-                                        
-                                            <img  style="width: 100%;"  src="<?=base_url('files/cloud_thumb/'.$registro->{$campo->slug})?>" />
-                                            <input type="hidden" name="<?=$campo->slug?>" value="<?=$registro->{$campo->slug}?>" />
-                                        
-                                         <?php }else{?>
-                                            <?=Asset::img('logo_mini.jpg','No imagen',array('style'=>'width:100%;'));?>
-                                         <?php }?> 
-                                         </div>
-                                         <?php if($this->method != 'details'){ ?>
-                                        <div class="col-md-9">
-                                            <?php echo form_upload($campo->slug); ?>
+                                   <div class="textarea">
+                                        <div id="container-chips">
+                                            
+                                            
                                         </div>
-                                        <?php }?>
-                                    </div>
+                                        <input type="text" class="input-textarea" />
+                                   
+                                   </div>
                                         
                                    
                                     
@@ -152,13 +165,46 @@
                             <?=form_error($campo->slug,'<span class="text-danger">','</span>')?>
                             </div>
                         <?php endforeach;?>
+                        
+                       
                         <?php if($configuracion->disciplinas && is_array($disciplinas)){ ?>
                          <div class="form-group">
                             <label>Disciplina</label>
-                            <?=form_dropdown('id_disciplina',array(''=>'[ Elegir ]')+$disciplinas,$registro->id_disciplina,'class="form-control" '.($this->method == 'details'?'disabled':''))?>
-                            <?=form_error('id_disciplina','<span class="text-danger">','</span>')?>
+                            <?=form_dropdown('disciplina',array(''=>'[ Elegir ]')+$disciplinas,$registro->disciplina,'class="form-control" id="disciplina" '.($this->method == 'details'?'disabled':''))?>
+                            <?=form_error('disciplina','<span class="text-danger">','</span>')?>
                          </div>
                          <?php }?>
+                         
+                          <div class="form-group hide" id="rama">
+                                <label>Rama</label>
+                                <?=form_dropdown('rama',null,'class="form-control" ');?>
+                                <?=form_error('rama','<span class="text-danger">','</span>')?>
+                          </div>
+                          <?php if($configuracion->fotografia){ ?>
+                          <hr />
+                             <div class="form-group">
+                                <label>Fotografía</label>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                         <?php if($registro->fotografia){ ?>
+                                        
+                                            <img  style="width: 100%;"  src="<?=base_url('files/cloud_thumb/'.$registro->fotografia)?>" />
+                                            <input type="hidden" name="fotografia" value="<?=$registro->fotografia?>" />
+                                        
+                                         <?php }else{?>
+                                            <?=Asset::img('logo_mini.jpg','No imagen',array('style'=>'width:100%;'));?>
+                                         <?php }?> 
+                                    </div>
+                                    <?php if($this->method != 'details'){ ?>
+                                        <div class="col-md-9">
+                                            <?php echo form_upload('fotografia',null,'accept="image/*"'); ?>
+                                        </div>
+                                    <?php }?>
+                                </div>
+                                <?=form_error('disciplina','<span class="text-danger">','</span>')?>
+                             </div>
+                          <?php }?>
+                          <p>Nota: Los campos marcados con (*) son obligatorios.</p>
                         <p class="text-center" id="form-actions">
                             
                             <?php if($this->method == 'details'){ ?>

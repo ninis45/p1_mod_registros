@@ -31,6 +31,22 @@ class Plugin_Registros extends Plugin
             //->append_metadata(Asset::js('modules/registros/index.js'));
             //->build('registros/metadata');
     }
+    public function listing()
+    {
+        $limit  = $this->attribute('limit',6);
+        $offset = $this->attribute('offset',0);
+        
+        $list  = $this->db->join('eventos','eventos.id=registro_configuracion.id_evento')
+                            ->where('cerrado',0)
+                            ->limit($limit,$offset)
+                            ->get('registro_configuracion')
+                            
+                            ->result();
+        
+       
+                    
+        return $list;
+    }
     public function load_form()
     {
         $base_where = array();

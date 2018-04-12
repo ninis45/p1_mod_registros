@@ -3,7 +3,7 @@
         <article>
                           
                             <div class="row">
-                                <div class="col-md-6" style="min-height: 215px;">
+                                <div class="col-md-6" >
                                     <div class="events small">
                                        
                                         <?php $altern = false; ?>
