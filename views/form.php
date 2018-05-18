@@ -33,7 +33,7 @@
         
         <div class="row">
             
-            <?php if($configuracion->template_columns=='2-6-4') :?>
+            <?php if($configuracion->template_column=='2-6-4') :?>
             <!-- Course Image -->
             <div class="col-md-2">
                 <figure class="course-image">
@@ -98,10 +98,10 @@
            
             <!--SIDEBAR Content-->
            
-            <div class="<?=$configuracion->template_columns=='2-6-4'?'col-md-4':'col-md-6'?>">
+            <div class="<?=$configuracion->template_column=='2-6-4'?'col-md-4':'col-md-6'?>">
                 <div id="page-sidebar" class="sidebar">
                 <?php if($configuracion->cerrado != 1){ ?>
-                    <aside>
+                    
                     <?php echo form_open_multipart($this->uri->uri_string().'?'.http_build_query($_GET),!$_GET['participante'] && $configuracion->autocomplete==1?'method="GET" id="form" ':' id="form"',$_GET); ?>
                         <header><h2>Registro al evento</h2></header>
                         <?php if($this->method == 'edit'){ ?>
@@ -127,9 +127,13 @@
                              <input type="hidden" name="participante" value="<?=$registro->participante?>" />
                             <input type="hidden" name="evento" value="<?=$evento->id?>" />
                          </div>
-                        <?php foreach($configuracion->campos as  $campo): ?>
-                            <div class="form-group">
-                            <?php if($campo->tipo!='hidden'){ ?>
+                        <?php foreach($campos as  $campo): ?>
+                            <?php if($campo->tipo=='legend'): ?>
+                                <h2><?=$campo->nombre?></h2>
+                                
+                            <?php endif;?>
+                            <div class="form-group" style="<?=isset($campo->class)?$campo->class:''?>">
+                            <?php if($campo->tipo!='hidden' && $campo->tipo!='legend'){ ?>
                                 <label><?=$campo->obligatorio?'*':''?><?=$campo->nombre?></label>
                             <?php }?>
                             <?php switch($campo->tipo){
@@ -168,9 +172,11 @@
                         
                        
                         <?php if($configuracion->disciplinas && is_array($disciplinas)){ ?>
+                        <hr />
                          <div class="form-group">
                             <label>Disciplina</label>
                             <?=form_dropdown('disciplina',array(''=>'[ Elegir ]')+$disciplinas,$registro->disciplina,'class="form-control" id="disciplina" '.($this->method == 'details'?'disabled':''))?>
+                            <p class="help-block">Selecciona la disciplina al cual vas  a inscribirte</p>
                             <?=form_error('disciplina','<span class="text-danger">','</span>')?>
                          </div>
                          <?php }?>

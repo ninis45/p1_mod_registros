@@ -12,7 +12,7 @@
         
         <div class="row">
             
-            <?php if($configuracion->template_columns=='2-6-4') :?>
+            <?php if($configuracion->template_column=='2-6-4') :?>
             <!-- Course Image -->
             <div class="col-md-2">
                 <figure class="course-image">
@@ -81,7 +81,7 @@
            
             <!--SIDEBAR Content-->
            
-            <div class="<?=$configuracion->template_columns=='2-6-4'?'col-md-4':'col-md-6'?>">
+            <div class="<?=$configuracion->template_column=='2-6-4'?'col-md-4':'col-md-6'?>">
                 <div id="page-sidebar" class="sidebar">
                     <?php if($configuracion->descripcion){ ?>
                                     <div class="alert alert-info">

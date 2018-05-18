@@ -1,4 +1,4 @@
-<section>
+<section> 
     <div class="lead text-success">Reporte de registros</div>
     
     <!--pre><?php print_r($data);?></pre-->
@@ -29,9 +29,16 @@
             <thead>
                 <tr>
                     <th rowspan="2">Plantel</th>
-                    <?php foreach($head as $disciplina):?>
+
+                    <?php if($tipo == 'deportivo'):?>
+                 <?php foreach($head as $disciplina):?>
+                        <th colspan="<?=count($disciplina['rama'])?>" width="10%" class="text-center"><?=strtoupper($disciplina['nombre'])?></th>
+                    <?php endforeach;?> 
+                <?php else: ?>  
+                 <?php foreach($head as $disciplina):?>
                         <th colspan="<?=count($disciplina['params'])?>" width="10%" class="text-center"><?=strtoupper($disciplina['nombre'])?></th>
-                    <?php endforeach;?>
+                    <?php endforeach;?> 
+                  <?php endif; ?>
                    
                     <th rowspan="2" width="10%" class="text-center">Participantes</th>
                     <th rowspan="2" width="10%">Personas</th>
@@ -39,14 +46,27 @@
                 </tr>
                 
                 <tr>
-                 <?php foreach($head as $disciplina):?>
+                <?php if($tipo == 'deportivo'):?>
+                 <?php foreach($head as $disciplina):?>                      
+                       <?php foreach($disciplina['rama'] as $rama):?>
+                        <?php if($rama!=0):?>
+
+                          <th class="text-center <?=$rama==1?'info':($rama==2?'danger':'')?>"><?=$rama==1?'VARONIL':($rama==2?'FEMENIL':' ')?></th>
+                        <?php else: ?>
+                         <?php foreach($disciplina['params'] as $param):?>
+                        <th class="text-center <?=$param==1?'info':($param==2?'danger':'')?>"><?=$param==1?'HOMBRE':($param==2?'MUJER':'ND')?></th>
+                      <?php endforeach;?>
+                        <?php endif ?>
+                     <?php endforeach;?>
+                  <?php endforeach;?>  
+                <?php else: ?>  
+                 <?php foreach($head as $disciplina):?> 
                       <?php foreach($disciplina['params'] as $param):?>
                         <th class="text-center <?=$param==1?'info':($param==2?'danger':'')?>"><?=$param==1?'HOMBRE':($param==2?'MUJER':'ND')?></th>
                       <?php endforeach;?>
                   <?php endforeach;?>  
-                    
-                </tr>
-               
+                  <?php endif; ?>                  
+                </tr>               
             </thead>
             <tbody>
             <?php 
@@ -62,22 +82,24 @@
                     <td><?=$group?></td> 
                     <?php foreach($head as $id_disciplina=>$disciplina):?>
                       
-                        <?php if($tipo == 'deportivo'){?>
-                        <td class="text-center"><?=$data[$id_centro]['disciplinas'][$disciplina]['Varonil']?'<a target="_blank" title="Descargar listado" href="'.base_url('admin/registros/download/'.$id_evento.'?plantel='.$id_centro.'&disciplina='.$disciplina.'&rama=1').'">'.$data[$id_centro]['disciplinas'][$disciplina]['Varonil'].'</a>':0?></td>
-                        <td class="text-center"><?=$data[$id_centro]['disciplinas'][$disciplina]['Femenil']?'<a target="_blank" title="Descargar listado" href="'.base_url('admin/registros/download/'.$id_evento.'?plantel='.$id_centro.'&disciplina='.$disciplina.'&rama=2').'">'.$data[$id_centro]['disciplinas'][$disciplina]['Femenil'].'</a>':0?></td>
-                        
-                            <?php 
-                            if(!isset($totales[$disciplina]))
-                            {
-                                $totales[$disciplina] = array(
-                                      'varonil'  => 0,
-                                      'Femenil'  => 0, 
-                                );
-                            }
-                            $totales['total'] +=  $data[$id_centro]['disciplinas'][$disciplina][1]+$data[$id_centro]['disciplinas'][$disciplina][2];
-                            $totales[$disciplina]['Varonil']+=$data[$id_centro]['disciplinas'][$disciplina]['Varonil'];
-                            $totales[$disciplina]['Femenil']+=$data[$id_centro]['disciplinas'][$disciplina]['Femenil'];
-                            ?>
+                        <?php if($tipo == 'deportivo'){;?>
+
+                        <?php foreach($disciplina['rama'] as $param): ?>
+                                <?php 
+                                $totales['total'] +=  $data[$group]['disciplinas'][$id_disciplina][$param];?>
+                                <?php $totales[$id_disciplina][$param] +=  $data[$group]['disciplinas'][$id_disciplina][$param];?>
+                                 <?php if($param==0): ?>.
+                                   <td class="text-center">                                    
+                                    <?=$data[$group]['disciplinas'][$id_disciplina][$param]?'<a target="_blank" title="Descargar listado" href="'.base_url('admin/registros/download/'.$id_evento.'?group='.$group.'&disciplina='.$id_disciplina).'&rama='.$param.'">'.$data[$group]['disciplinas'][$id_disciplina][$param].'</a>':0?>
+                                </td>  
+                                <?php else: ?>
+                                <td class="text-center">
+                                    
+                                    <?=$data[$group]['disciplinas'][$id_disciplina][$param]?'<a target="_blank" title="Descargar listado" href="'.base_url('admin/registros/download/'.$id_evento.'?group='.$group.'&disciplina='.$id_disciplina).'&rama='.$param.'">'.$data[$group]['disciplinas'][$id_disciplina][$param].'</a>':0?>
+                                </td>
+                                <?php endif ?>
+                            <?php endforeach;?>
+
                         <?php }else{?>
                             <?php foreach($disciplina['params'] as $param): ?>
                                 <?php $totales['total'] +=  $data[$group]['disciplinas'][$id_disciplina][$param];?>

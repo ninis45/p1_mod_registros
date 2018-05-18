@@ -292,6 +292,7 @@ class Registros extends Public_Controller
                                 ->get('registro_configuracion')->row();
         
         $base_where = array(
+            'rama'          => $this->input->post('rama')?$this->input->post('rama'):0,
             'id_disciplina' => $field,
             'id_evento'     => $this->input->post('evento'),
             'inscrito'      => 1,
@@ -397,7 +398,7 @@ class Registros extends Public_Controller
         
         $evento->date_countdown = format_date($evento->fecha,'M d,Y H:i:s');
         $configuracion = $this->db->where('id_evento',$id_evento)->get('registro_configuracion')->row();
-        
+       
         //Verificar que no encuentra cerrado
         
         if($configuracion->cerrado)
@@ -461,11 +462,11 @@ class Registros extends Public_Controller
         }
         
         
-        $configuracion->campos = json_decode($configuracion->campos);
+        $campos = json_decode($configuracion->campos);
         
+        unset($configuracion->campos);
         
-        
-        foreach($configuracion->campos as $campo)
+        foreach($campos as $campo)
         {
             $this->validation_rules[] = array(
 				'field' => $campo->slug,
@@ -506,10 +507,12 @@ class Registros extends Public_Controller
             $folder = $this->file_folders_m->get_by_path('alumnos') OR show_error('La carpeta aun no ha sido creada: Alumnos');
             $extra = array();
             
-            foreach($configuracion->campos as $campo)
+            foreach($campos as $campo)
             {
                 //if(!$_FILES['xml_file']['name'])
                // {
+                if($campo->tipo == 'legend')continue;
+                    
                 if($campo->tipo == 'upload' && $_FILES[$campo->slug]['name'])
                 {
                     $result_file = Files::upload($folder->id,false,$campo->slug);
@@ -531,7 +534,7 @@ class Registros extends Public_Controller
                 'participante' => strtoupper($this->input->post('participante')),
                 'telefono'     => $this->input->post('telefono'),
                 'email'        => $this->input->post('email'),
-                'rama'         => $this->input->post('rama'),
+                'rama'         => $this->input->post('rama')?$this->input->post('rama'):0,
                 'updated_on'   => now(),
                 'id_disciplina' => $this->input->post('disciplina')?$this->input->post('disciplina'):null,
                 'fotografia'    => $this->input->post('fotografia'),
@@ -554,11 +557,17 @@ class Registros extends Public_Controller
                 
                     if($configuracion->module)
                         Registro::SaveResource($configuracion,$this->input->post('module_id'),$this->input->post());
-                    
-                    if($configuracion->template && $data['email'])
+                    //print_r($participante);
+                    //print_r($data);
+                   
+                    //        print_r($data);
+                            
+                            
+                    if( $configuracion->template && $data['email'] && $participante->send_email < 1)
                     {
                             
                             //$data['id']                 = $id;  
+                            $data['disciplina'] = isset($disciplina)?$disciplina:false;
                             $data['evento']             = $evento; 
                             $data['registro']           = $this->registro_m->get($id); 
                             $data['nombre']             = strtoupper($this->input->post('participante'));
@@ -567,16 +576,18 @@ class Registros extends Public_Controller
                        		$data['from'] 				= Settings::get('server_email');
                        		$data['name']				= Settings::get('site_name');
                        		$data['reply-to']			= 'educacion.continua@cobacam.edu.mx';//Settings::get('contact_email');
-                             Events::trigger('email', $data, 'array');
+                            Events::trigger('email', $data, 'array');
                              
-                             
+                            $this->registro_m->update($id,array(
+                              'send_email'=> $participante->send_email+1
+                            ));  
                          $this->session->set_flashdata('success',sprintf(lang('registros:add_thanks_email'),$data['email'],$configuracion->acuse,$id));
                     }
                     else
                     {
                         $this->session->set_flashdata('success',lang('registros:add_thanks'));
                     }
-            
+                        
                  redirect('registros/detalles/'.$id_evento.'/'.$id);
             }
             else
@@ -598,6 +609,7 @@ class Registros extends Public_Controller
                 ->set('evento',$evento)
                 ->set('registro',$registro)
                 ->set('configuracion',$configuracion)
+                ->set('campos',$campos)
                 //->enable_parser(false)
                 //->set('list',$list)//Para el autocomplete
                 ->build('form');
@@ -621,7 +633,7 @@ class Registros extends Public_Controller
     }
     function details($id_evento='',$id)
     {
-        $registro = $this->registro_m->select('*,id_disciplina AS disciplina')->get($id);
+        $registro = $this->registro_m->select('*,id_disciplina AS disciplina')->get($id) OR show_404();
          
         
          
@@ -651,10 +663,11 @@ class Registros extends Public_Controller
           $this->template->title($this->module_details['name'],'Detalles del registro')
                 ->append_js('spin.min.js')
                 ->append_js('module::front/form.js')
-                ->append_metadata('<script type="text/javascript">var lng='.($evento->map_longitud?$evento->map_longitud:-90.5467695763607).',lat='.($evento->map_latitud?$evento->map_latitud:19.833932192097134).',zoom='.($evento->map_zoom?$evento->map_zoom:10).', url_current=\''.base_url($this->uri->uri_string()).'\', data =[]; '.$configuracion->javascript.'</script>')
+                ->append_metadata('<script type="text/javascript">var value_rama=\''.$registro->rama.'\',display_autocomplete=false,disciplinas='.(isset($disciplinas)?json_encode($disciplinas):'[]').', lng='.($evento->map_longitud?$evento->map_longitud:-90.5467695763607).',lat='.($evento->map_latitud?$evento->map_latitud:19.833932192097134).',zoom='.($evento->map_zoom?$evento->map_zoom:10).', url_current=\''.base_url($this->uri->uri_string()).'\', data =[]; '.$configuracion->javascript.'</script>')
                 ->set('evento',$evento)
                 ->set('registro',$registro)
                 ->set('configuracion',$configuracion)
+                ->set('campos',$configuracion->campos)
                  ->set_layout('basic.html')
                 //->enable_parser(false)
                 //->set('list',$list)//Para el autocomplete
@@ -732,6 +745,7 @@ class Registros extends Public_Controller
             {
                 //if(!$_FILES['xml_file']['name'])
                // {
+                if($campo->tipo == 'legend')continue;
                 if($campo->tipo == 'upload' && $_FILES[$campo->slug]['name'])
                 {
                 }
@@ -777,7 +791,7 @@ class Registros extends Public_Controller
                    		$data['to'] 				= $data['email'];
                    		$data['from'] 				= Settings::get('server_email');
                    		$data['name']				= Settings::get('site_name');
-                   		$data['reply-to']			= 'educacion.continua@cobacam.edu.mx';//Settings::get('contact_email');
+                   		$data['reply-to']			= 'chicaychico.cobacam2018@cobacam.edu.mx';//Settings::get('contact_email');
                          Events::trigger('email', $data, 'array');
                          
                          
@@ -833,7 +847,7 @@ class Registros extends Public_Controller
        
         $output = ''; 
         $name_doc = '';    
-        $this->current_user OR redirect('users/login');           
+        //$this->current_user OR redirect('users/login');           
         $director = $this->db->select('*,centros.nombre AS nombre_centro')
                             ->join('users','users.id=directores.user_id')
                             ->join('centros','centros.id=directores.id_centro')
@@ -841,7 +855,7 @@ class Registros extends Public_Controller
                             ->get('directores')->row();
                        
         $base_where = array(
-            'registros.user_id' => $director->user_id,
+            //'registros.user_id' => $director->user_id,
             'inscrito'          => 1
         );
        
@@ -1019,12 +1033,12 @@ class Registros extends Public_Controller
         $this->load->library(array('pdf','parser'));
         $this->load->model('templates/email_templates_m');
         
-         $this->current_user OR redirect('users/login');           
-        $director = $this->db->select('*,centros.nombre AS nombre_centro')
+                
+        /*$director = $this->db->select('*,centros.nombre AS nombre_centro')
                             ->join('users','users.id=directores.user_id')
                             ->join('centros','centros.id=directores.id_centro')
                             ->where('user_id',$this->current_user->id)
-                            ->get('directores')->row();
+                            ->get('directores')->row();*/
         
         
         $html2pdf = new HTML2PDF('P', 'A4', 'fr');
@@ -1042,12 +1056,26 @@ class Registros extends Public_Controller
             $registro = $this->registro_m->select('*,registros.id AS id,eventos.fecha AS fecha')
                                     ->join('eventos','eventos.id=registros.id_evento')
                                 ->get_by('registros.id',$id) OR show_404();
+                                
+                             
+            $disciplina = false;
             
             $registro->extra = json_decode($registro->extra);
             
+            if($registro->id_disciplina)
+            {
+                $disciplina = $this->db->where(array(
+                                      'disciplinas.id' => $registro->id_disciplina,
+                                      
+                                ))
+                                
+                                ->get('disciplinas')->row();
+                                
+                
+            }
             if($registro)
             {
-                $output = $this->parser->parse_string($email_template['body'],array_merge($_GET,array('registro'=>$registro,'centro'=>$director->nombre_centro)),true);
+                $output = $this->parser->parse_string($email_template['body'],array_merge($_GET,array('registro'=>$registro,'disciplina'=>$disciplina)),true);
            
                 $html2pdf->writeHTML($output);
                 $html2pdf->Output($name_doc.'_'.now().'.pdf','I');

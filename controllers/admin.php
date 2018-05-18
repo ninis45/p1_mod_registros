@@ -152,12 +152,13 @@ class Admin extends Admin_Controller
                             //->group_by('id_centro,registros.id_disciplina,sexo')
                             ->order_by('sexo')
                             ->get_all();
-        
+        //print_r($registros);
         
         foreach($registros as $registro)
         {
             //$registro->sexo = $registro->sexo == 1?'Hombre':($registro->sexo == 2?'Mujer':'Sin descripción');
             
+            $registro->rama = $registro->rama?$registro->rama:0;
             
             $registro->sexo = $registro->sexo?$registro->sexo:0;
             
@@ -166,7 +167,8 @@ class Admin extends Admin_Controller
                 //$registro->nombre_disciplina
                 $head[$registro->id_disciplina] = array(
                     'nombre' => $registro->nombre_disciplina,
-                    'params' => array()
+                    'params' => array(),
+                    
                 );
                 //$head[$registro->nombre_disciplina] = array();
                 
@@ -176,6 +178,12 @@ class Admin extends Admin_Controller
             {
                
                 $head[$registro->id_disciplina]['params'][] = $registro->sexo;
+                
+            }
+            if(!in_array($registro->rama,$head[$registro->id_disciplina]['rama']))
+            {
+               
+                $head[$registro->id_disciplina]['rama'][] = $registro->rama;
                 
             }
             
@@ -221,30 +229,37 @@ class Admin extends Admin_Controller
                 $data[$registro->{$configuracion->group_by}]['asesores'][] = $registro->extra->asesor;
                 
             }
-            /*if(in_array($registro->participante,$data[$registro->id_centro]['personas']) == false)
-            {
-                $data[$registro->id_centro]['personas'][] = $registro->participante;
-            }*/
-            $registro->rama = $registro->rama==1?'Varonil':'Femenil';
+           // if(in_array($registro->participante,$data[$registro->id_centro]['personas']) == false)
+           //{
+                //$data[$registro->id_centro]['personas'][] = $registro->participante;
+            //$data[$registro->{$configuracion->group_by}]['disciplinas'][$registro->id_disciplina]['rama_'.$registro->rama] += 1;
+          /*  }
+            //$registro->rama = $registro->rama==1?'Varonil':'Femenil';
             
+
+
+            */
           
             
-            /*if($registro->tipo_disciplina == 'deportivo'){
-                $data[$registro->{$configuracion->group_by}]['disciplinas'][$registro->nombre_disciplina][$registro->rama] += 1;//= $registro->total;
+            if($registro->tipo_disciplina == 'deportivo'){
+                $data[$registro->{$configuracion->group_by}]['disciplinas'][$registro->id_disciplina][$registro->rama] += 1;//= $registro->total;
             }
             else
             {
-                $data[$registro->{$configuracion->group_by}]['disciplinas'][$registro->nombre_disciplina][$registro->sexo] += 1;//$registro->total;
-                
-            }*/
-            //if($registro->sexo)
+                //$data[$registro->{$configuracion->group_by}]['disciplinas'][$registro->nombre_disciplina][$registro->sexo] += 1;//$registro->total;
                 $data[$registro->{$configuracion->group_by}]['disciplinas'][$registro->id_disciplina][$registro->sexo] += 1;
+                
+            }
+            //if($registro->sexo)
+               // $data[$registro->{$configuracion->group_by}]['disciplinas'][$registro->id_disciplina][$registro->sexo] += 1;
+
+                
             //else
               //  $data[$registro->{$configuracion->group_by}]['disciplinas'][$registro->nombre_disciplina] += 1;
         }
-        
-        //print_r($data);
+
         //exit();
+
         $this->template->set('data',$data)
                     ->enable_parser(true)
                     ->set('head',$head)
@@ -291,7 +306,8 @@ class Admin extends Admin_Controller
                 if($configuracion->group_by && $groups)
                 {
                     $rows_import = $this->db->where_in($configuracion->group_by,$groups)
-                                    ->get($configuracion->module)->result();
+                                            ->where('grado NOT IN(\'6\')',null)
+                                             ->get($configuracion->module)->result();
                 }
                 $segments = $configuracion?explode(',',$configuracion->participante) :array();
                 if($rows_import)
@@ -935,7 +951,7 @@ class Admin extends Admin_Controller
     }
     function download($id=0)
     {
-         $this->load->library(array('Excel'));
+       $this->load->library(array('Excel'));
     
          error_reporting(E_ALL);
         ini_set('display_errors', TRUE);
@@ -951,6 +967,7 @@ class Admin extends Admin_Controller
         $disciplina = $this->input->get('disciplina');
         $group      = $this->input->get('group');
         $sexo       = $this->input->get('param');
+        $rama       = $this->input->get('rama');
         
         $base_where = array(
             'registros.id_evento' => $id,
@@ -988,6 +1005,10 @@ class Admin extends Admin_Controller
         {
             $base_where['registros.sexo'] = $sexo;
         }
+        if(is_numeric($rama))
+        {
+            $base_where['registros.rama'] = $rama;
+        }
          if($group && $configuracion->group_by)
         {
             $base_where[$configuracion->module.'.'.$configuracion->group_by] = $group;
@@ -1006,20 +1027,25 @@ class Admin extends Admin_Controller
        $this->excel->getActiveSheet()->setTitle(date('d M Y'));
        $this->excel->getActiveSheet()->setCellValue('A1','ID');
        $this->excel->getActiveSheet()->setCellValue('C1','Participante');
-        $pos_x = 3;
+       
+       $pos_x = 3;
        if($configuracion->disciplinas)
        {
             $this->excel->getActiveSheet()->setCellValue('D1','Disciplina');
             $pos_x++;
+            $this->excel->getActiveSheet()->setCellValue('E1','Rama');
+            $pos_x++;
        }
-       
+      
        $this->excel->getActiveSheet()->setCellValue('B1',ucfirst($configuracion->module_id));
        
       
        
-       $columns = array('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z');
+       $columns = array('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN','AO','AP','AQ','AR','AS','AT','AU','AV','AW','AX','AY','AZ','BA','BB','BC','BD','BE','BF','BG','BH','BI','BJ','BK','BL','BM','BN','BO','BP','BQ');
+        
         foreach($configuracion->campos as $campo)
         {
+            if($campo->tipo=='legend') continue;
             $this->excel->getActiveSheet()->setCellValue($columns[$pos_x].'1',$campo->nombre);
             $pos_x++;
         }
@@ -1047,16 +1073,35 @@ class Admin extends Admin_Controller
                  $disciplina = $this->db->where('id',$registro->id_disciplina)->get('disciplinas')->row();
                  $this->excel->getActiveSheet()->setCellValue('D'.($index+2),$disciplina->nombre);
                  $pos_x ++;
+                 if($registro->rama == 1)
+                       {
+                  $this->excel->getActiveSheet()->setCellValue('E'.($index+2),'VARONIL');
+                  $pos_x ++;
+                        }
+                      elseif($registro->rama == 2)
+                      {
+                    $this->excel->getActiveSheet()->setCellValue('E'.($index+2),'FEMENIL');
+                    $pos_x ++;     
+                      }
+                     else
+                      {
+                    $this->excel->getActiveSheet()->setCellValue('E'.($index+2),'INDISTINTO');
+                    $pos_x ++;
+                     }
+
+
             }
             $this->excel->getActiveSheet()->setCellValue('A'.($index+2),$registro->id);
             $this->excel->getActiveSheet()->setCellValue('B'.($index+2),$registro->module_id);
             $this->excel->getActiveSheet()->setCellValue('C'.($index+2),$registro->participante);
             
-            
+
+                       
             
             $registro->extra = json_decode($registro->extra);
             foreach($configuracion->campos as $campo)
             {
+                if($campo->tipo=='legend') continue;
                 $this->excel->getActiveSheet()->setCellValue($columns[$pos_x].($index+2),$registro->extra->{$campo->slug});
                 $pos_x++;
             }
@@ -1308,11 +1353,12 @@ class Admin extends Admin_Controller
           
             $registro->extra = json_decode($registro->extra);
             
-             $registro->extra->sexo= $registro->sexo;
-             $registro->extra->escuela= $registro->escuela;
+             //$registro->extra->sexo= $registro->sexo;
+             //$registro->extra->escuela= $registro->escuela;
+             $registro->extra->fechanaci = $registro->fechanaci;
              
             
-            $this->registro_m->update( $registro->id,array('fotografia'=>$registro->extra->fotografia,'sexo'=>$registro->sexo, 'extra'=>json_encode($registro->extra)));
+            $this->registro_m->update( $registro->id,array( 'extra'=>json_encode($registro->extra)));
         }
     }
     function img($id_evento)

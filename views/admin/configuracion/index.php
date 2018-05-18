@@ -137,7 +137,7 @@
                 <br />
                 <small class="text-muted">Integra una plantilla para la descarga de la Cédula.</small>
             </div>
-            <div class="col-lg-8"><?=form_dropdown('template_cedula',array(''=>' [ Elegir ] ')+$templates,$configuracion->template,'class="form-control"')?></div>
+            <div class="col-lg-8"><?=form_dropdown('template_cedula',array(''=>' [ Elegir ] ')+$templates,$configuracion->template_cedula,'class="form-control"')?></div>
         </div>
         <hr />
         <div class="form-group row">
@@ -213,7 +213,24 @@
                 </table>
             </div>
             <div class="col-md-6">
-                <table class="table" ng-if="rows_right.length>0">
+                <p><a href="#" class="btn" ng-click="ordenar_list=false">Agregar</a> | <a class="btn" href="#" ng-click="ordenar_list=true">Ordenar</a>  </p>
+                <div id="block-sorter" ui-tree="options" ng-hide="!ordenar_list">
+                    <ol ui-tree-nodes ng-model="rows_right">
+                        <li ui-tree-node  ng-repeat="(i,row) in rows_right">
+                            
+                               <div class="angular-ui-tree-handle">
+                                    
+                                    <p><strong>{{$index+1}} .- {{row.nombre}}</strong> - {{row.slug}} / {{row.tipo}}</p>
+                                    
+                                </div>
+                                                          
+                            
+                           
+                           
+                        </li>
+                    </ol>
+                </div>
+                <table class="table" ng-if="rows_right.length>0" ng-hide="ordenar_list">
                     <thead>
                         <tr>
                             <th>Nombre</th>
@@ -227,6 +244,8 @@
                                 <input type="hidden" name="campos[{{$index}}][nombre]" value="{{row.nombre}}" />
                                 <input type="hidden" name="campos[{{$index}}][slug]" value="{{row.slug}}" />
                                 <input type="hidden" name="campos[{{$index}}][tipo]" value="{{row.tipo}}" />
+                                <input type="hidden" name="campos[{{$index}}][class]" value="{{row.class}}" />
+                                
                                 <input type="hidden" name="campos[{{$index}}][opciones]" value="{{row.opciones}}" />
                                 
                                 <input type="hidden" name="campos[{{$index}}][grupo]" value="{{row.grupo}}" />
@@ -282,15 +301,23 @@
                                 <option value="upload">Archivo</option>
                                 <option value="hidden">Oculto</option>
                                 <option value="textarea">Area de texto(Chips)</option>
+                                
+                                <option value="legend">Leyenda</option>
                             </select>
                                 
                     </div>
-                    
+                    <div class="form-group">
+                        
+                            <label>Clase CSS</label>
+                            <input type="text" class="form-control" ng-model="form.class"/>
+                            <p class="help-block">Clase CSS para el Form Group</p>
+                                
+                    </div>
                     <div class="form-group" ng-if="form.tipo=='select'">
                         
                             <label>Opciones</label>
                             <textarea class="form-control" ng-model="form.opciones" placeholder="Ejemplo de sintaxis: 0=Inactivo|1=Activo"></textarea>
-                                
+                                  
                     </div>
                     
                     <div class="form-group">
