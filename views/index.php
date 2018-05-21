@@ -80,7 +80,7 @@
             </div><!-- /.col-md-8 -->
            
             <!--SIDEBAR Content-->
-           
+            <?php if($configuracion->abierto==1): ?>
             <div class="<?=$configuracion->template_column=='2-6-4'?'col-md-4':'col-md-6'?>">
                 <div id="page-sidebar" class="sidebar">
                     <?php if($configuracion->descripcion){ ?>
@@ -202,6 +202,7 @@
                     
                 </div><!-- /#sidebar -->
             </div><!-- /.col-md-4 -->
+            <?php endif;?>
             <!-- end SIDEBAR Content-->
         </div><!-- /.row -->
     </div>
